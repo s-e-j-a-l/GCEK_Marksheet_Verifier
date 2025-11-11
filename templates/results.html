@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="feature-icon mx-auto mb-3">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1 class="display-6 fw-bold gradient-text mb-2">Verification Complete</h1>
+            <p class="text-muted">
+                Comprehensive analysis of your academic marksheet
+            </p>
+        </div>
+
+        <!-- Student Type Card -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-4">
+                <h4 class="mb-3">Student Type</h4>
+                <span class="badge bg-{{ 'success' if 'NEP' in student_type else 'info' }} fs-5 p-3">
+                    <i class="fas fa-{{ 'user-graduate' if 'NEP' in student_type else 'user' }} me-2"></i>
+                    {{ student_type }}
+                </span>
+                <p class="text-muted mt-2 mb-0">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    {{ filename }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-3">
+                <h4 class="mb-2">
+                    Verification Status: 
+                    <span class="badge bg-{{ 'success' if verification.egp.match and verification.credits.match and verification.sgpa.match else 'warning' }}">
+                        <i class="fas fa-{{ 'check' if verification.egp.match and verification.credits.match and verification.sgpa.match else 'exclamation' }}-circle me-2"></i>
+                        {{ 'All Values Verified' if verification.egp.match and verification.credits.match and verification.sgpa.match else 'Review Recommended' }}
+                    </span>
+                </h4>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-book me-2"></i>
+                    {{ total_courses }} courses processed
+                </p>
+            </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card verification-card h-100">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-calculator fa-2x mb-2" style="color: #2c3e50;"></i>
+                        <h6>EGP</h6>
+                        <h4 class="{{ 'text-success' if verification.egp.match else 'text-danger' }} fw-bold mb-2">
+                            {{ "%.1f"|format(verification.egp.calculated) }}
+                        </h4>
+                        <small class="text-muted">Reported: {{ "%.1f"|format(verification.egp.reported) }}</small>
+                        <div class="mt-2">
+                            <span class="badge bg-{{ 'success' if verification.egp.match else 'danger' }}">
+                                {{ 'Verified' if verification.egp.match else 'Mismatch' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card verification-card h-100">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-weight-hanging fa-2x mb-2" style="color: #2c3e50;"></i>
+                        <h6>Credits</h6>
+                        <h4 class="{{ 'text-success' if verification.credits.match else 'text-danger' }} fw-bold mb-2">
+                            {{ "%.1f"|format(verification.credits.calculated) }}
+                        </h4>
+                        <small class="text-muted">Reported: {{ "%.1f"|format(verification.credits.reported) }}</small>
+                        <div class="mt-2">
+                            <span class="badge bg-{{ 'success' if verification.credits.match else 'danger' }}">
+                                {{ 'Verified' if verification.credits.match else 'Mismatch' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card verification-card h-100">
+                    <div class="card-body text-center p-3">
+                        <i class="fas fa-percentage fa-2x mb-2" style="color: #2c3e50;"></i>
+                        <h6>SGPA</h6>
+                        <h4 class="{{ 'text-success' if verification.sgpa.match else 'text-danger' }} fw-bold mb-2">
+                            {{ "%.2f"|format(verification.sgpa.calculated) }}
+                        </h4>
+                        <small class="text-muted">Reported: {{ "%.2f"|format(verification.sgpa.reported) }}</small>
+                        <div class="mt-2">
+                            <span class="badge bg-{{ 'success' if verification.sgpa.match else 'danger' }}">
+                                {{ 'Verified' if verification.sgpa.match else 'Mismatch' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Course Analysis
+                    </h5>
+                    <span class="badge bg-primary">
+                        {{ courses|length }} Courses
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                {% if courses and courses[0].get('semester') %}
+                                <th>Semester</th>
+                                {% endif %}
+                                <th>Course Code</th>
+                                <th>Credit</th>
+                                <th>Earned</th>
+                                <th>Grade</th>
+                                <th>Point</th>
+                                <th>Contribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                {% if course.get('semester') %}
+                                <td class="fw-bold">{{ course.semester }}</td>
+                                {% endif %}
+                                <td class="fw-bold">{{ course.course_code }}</td>
+                                <td>{{ course.credit }}</td>
+                                <td>{{ course.earned }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ course.grade }}</span>
+                                </td>
+                                <td>
+                                    {% set grade_points = {'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D': 4, 'F': 0, 'FF': 0, 'P': 5, 'PP': 5, 'PASS': 5, 'COMP': 5} %}
+                                    {% set grade_point = grade_points.get(course.grade.upper(), 0) %}
+                                    <span class="fw-bold">{{ grade_point }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ (course.earned * grade_point)|int }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-active fw-bold">
+                            <tr>
+                                {% if courses and courses[0].get('semester') %}
+                                <td>Total</td>
+                                {% endif %}
+                                <td>Total</td>
+                                <td>{{ courses|sum(attribute='credit') }}</td>
+                                <td>{{ "%.1f"|format(verification.credits.calculated) }}</td>
+                                <td></td>
+                                <td></td>
+                                <td>{{ "%.1f"|format(verification.egp.calculated) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-plus-circle me-2"></i>Verify Another
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-print me-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">
+    <i class="fas fa-check-double me-2"></i>Bulk Verification Results
+  </h2>
+
+  <div class="table-responsive shadow-sm rounded">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>File Name</th>
+          <th>Student Type</th>
+          <th>EGP (Calculated)</th>
+          <th>EGP (Reported)</th>
+          <th>Credits (Calculated)</th>
+          <th>Credits (Reported)</th>
+          <th>SGPA (Calculated)</th>
+          <th>SGPA (Reported)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        {% for r in results %}
+        <tr 
+          class="
+            {% if r.status == '✅ Correct' %}
+              table-success
+            {% elif r.status == '❌ Wrong' %}
+              table-danger
+            {% elif r.error %}
+              table-warning
+            {% endif %}
+          ">
+          <td><strong>{{ r.filename }}</strong></td>
+          <td>
+            <span class="badge bg-{{ 'success' if 'NEP' in r.student_type else 'info' }}">
+              {{ r.student_type }}
+            </span>
+          </td>
+
+          {% if r.calculated and r.reported %}
+          <td>{{ "%.1f"|format(r.calculated.egp) }}</td>
+          <td>{{ "%.1f"|format(r.reported.egp) }}</td>
+          <td>{{ "%.1f"|format(r.calculated.credits) }}</td>
+          <td>{{ "%.1f"|format(r.reported.credits) }}</td>
+          <td>{{ "%.2f"|format(r.calculated.sgpa) }}</td>
+          <td>{{ "%.2f"|format(r.reported.sgpa) }}</td>
+          {% else %}
+          <td colspan="6" class="text-muted">— Data not available —</td>
+          {% endif %}
+
+          <td>
+            {% if r.status %}
+              <strong>{{ r.status }}</strong>
+            {% elif r.error %}
+              <strong class="text-danger">Error: {{ r.error }}</strong>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('index') }}" class="btn btn-primary px-4">
+      <i class="fas fa-arrow-left me-2"></i>Back to Upload
+    </a>
+  </div>
+</div>
+{% endblock %}
