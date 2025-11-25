@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="feature-icon mx-auto mb-3">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <h1 class="display-6 fw-bold gradient-text mb-2">Double Semester Verification Complete</h1>
+            <p class="text-muted">
+                Comprehensive analysis of both semesters
+            </p>
+        </div>
+
+        <!-- Marksheet Actions -->
+        <div class="marksheet-actions">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-2">
+                        <i class="fas fa-file-pdf text-danger me-2"></i>
+                        {{ filename }}
+                    </h4>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ result.student_type }} • {{ result.all_courses|length }} Courses Processed
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if result.pdf_url %}
+                    <button onclick="printMarksheet('{{ result.pdf_url }}')" class="btn btn-success btn-lg">
+                        <i class="fas fa-print me-2"></i>Print Marksheet
+                    </button>
+                    {% else %}
+                    <span class="text-muted">PDF not available</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Type Card -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-4">
+                <h4 class="mb-3">Student Type</h4>
+                <span class="badge bg-primary fs-5 p-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    {{ result.student_type }}
+                </span>
+                <p class="text-muted mt-2 mb-0">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    {{ filename }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-3">
+                <h4 class="mb-2">
+                    Verification Status: 
+                    <span class="badge bg-{{ 'success' if '✅' in result.status else 'danger' }}">
+                        <i class="fas fa-{{ 'check' if '✅' in result.status else 'exclamation' }}-circle me-2"></i>
+                        {{ result.status }}
+                    </span>
+                </h4>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-book me-2"></i>
+                    {{ result.all_courses|length }} courses processed
+                </p>
+            </div>
+        </div>
+
+        <!-- Results Grid - Previous Semester -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-arrow-left me-2"></i>Previous Semester Performance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card verification-card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-calculator fa-2x mb-2" style="color: #2c3e50;"></i>
+                                        <h6>EGP</h6>
+                                        <h4 class="{{ 'text-success' if result.verification.previous.egp.match else 'text-danger' }} fw-bold mb-2">
+                                            {{ "%.1f"|format(result.verification.previous.egp.calculated) }}
+                                        </h4>
+                                        <small class="text-muted">Reported: {{ "%.1f"|format(result.verification.previous.egp.reported) }}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ 'success' if result.verification.previous.egp.match else 'danger' }}">
+                                                {{ 'Verified' if result.verification.previous.egp.match else 'Mismatch' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card verification-card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-weight-hanging fa-2x mb-2" style="color: #2c3e50;"></i>
+                                        <h6>Credits</h6>
+                                        <h4 class="{{ 'text-success' if result.verification.previous.credits.match else 'text-danger' }} fw-bold mb-2">
+                                            {{ "%.1f"|format(result.verification.previous.credits.calculated) }}
+                                        </h4>
+                                        <small class="text-muted">Reported: {{ "%.1f"|format(result.verification.previous.credits.reported) }}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ 'success' if result.verification.previous.credits.match else 'danger' }}">
+                                                {{ 'Verified' if result.verification.previous.credits.match else 'Mismatch' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card verification-card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-percentage fa-2x mb-2" style="color: #2c3e50;"></i>
+                                        <h6>SGPA</h6>
+                                        <h4 class="{{ 'text-success' if result.verification.previous.sgpa.match else 'text-danger' }} fw-bold mb-2">
+                                            {{ "%.2f"|format(result.verification.previous.sgpa.calculated) }}
+                                        </h4>
+                                        <small class="text-muted">Reported: {{ "%.2f"|format(result.verification.previous.sgpa.reported) }}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ 'success' if result.verification.previous.sgpa.match else 'danger' }}">
+                                                {{ 'Verified' if result.verification.previous.sgpa.match else 'Mismatch' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Grid - Current Semester -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-arrow-right me-2"></i>Current Semester Performance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card verification-card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-calculator fa-2x mb-2" style="color: #2c3e50;"></i>
+                                        <h6>EGP</h6>
+                                        <h4 class="{{ 'text-success' if result.verification.current.egp.match else 'text-danger' }} fw-bold mb-2">
+                                            {{ "%.1f"|format(result.verification.current.egp.calculated) }}
+                                        </h4>
+                                        <small class="text-muted">Reported: {{ "%.1f"|format(result.verification.current.egp.reported) }}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ 'success' if result.verification.current.egp.match else 'danger' }}">
+                                                {{ 'Verified' if result.verification.current.egp.match else 'Mismatch' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card verification-card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-weight-hanging fa-2x mb-2" style="color: #2c3e50;"></i>
+                                        <h6>Credits</h6>
+                                        <h4 class="{{ 'text-success' if result.verification.current.credits.match else 'text-danger' }} fw-bold mb-2">
+                                            {{ "%.1f"|format(result.verification.current.credits.calculated) }}
+                                        </h4>
+                                        <small class="text-muted">Reported: {{ "%.1f"|format(result.verification.current.credits.reported) }}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ 'success' if result.verification.current.credits.match else 'danger' }}">
+                                                {{ 'Verified' if result.verification.current.credits.match else 'Mismatch' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card verification-card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-percentage fa-2x mb-2" style="color: #2c3e50;"></i>
+                                        <h6>SGPA</h6>
+                                        <h4 class="{{ 'text-success' if result.verification.current.sgpa.match else 'text-danger' }} fw-bold mb-2">
+                                            {{ "%.2f"|format(result.verification.current.sgpa.calculated) }}
+                                        </h4>
+                                        <small class="text-muted">Reported: {{ "%.2f"|format(result.verification.current.sgpa.reported) }}</small>
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ 'success' if result.verification.current.sgpa.match else 'danger' }}">
+                                                {{ 'Verified' if result.verification.current.sgpa.match else 'Mismatch' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Semester Courses -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>Previous Semester Courses
+                    </h5>
+                    <span class="badge bg-primary">
+                        {{ result.odd_semester_courses|length }} Courses
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Semester</th>
+                                <th>Course Code</th>
+                                <th>Credit</th>
+                                <th>Earned</th>
+                                <th>Grade</th>
+                                <th>Point</th>
+                                <th>Contribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in result.odd_semester_courses %}
+                            <tr>
+                                <td class="fw-bold">
+                                    <span class="badge bg-secondary">{{ course.semester }}</span>
+                                </td>
+                                <td class="fw-bold text-primary">{{ course.course_code }}</td>
+                                <td>{{ course.credit }}</td>
+                                <td>{{ course.earned }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ course.grade }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set grade_points = {'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D': 4, 'F': 0, 'FF': 0} %}
+                                    {% set grade_point = grade_points.get(course.grade.upper(), 0) %}
+                                    <span class="fw-bold">{{ grade_point }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">{{ (course.earned * grade_point)|int }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-active fw-bold">
+                            <tr>
+                                <td colspan="2">Total</td>
+                                <td>{{ result.odd_semester_courses|sum(attribute='credit') }}</td>
+                                <td>{{ result.odd_semester_courses|sum(attribute='earned') }}</td>
+                                <td></td>
+                                <td></td>
+                                <td>{{ "%.1f"|format(result.calculated_data.previous.egp) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Semester Courses -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-check me-2"></i>Current Semester Courses
+                    </h5>
+                    <span class="badge bg-primary">
+                        {{ result.even_semester_courses|length }} Courses
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Semester</th>
+                                <th>Course Code</th>
+                                <th>Credit</th>
+                                <th>Earned</th>
+                                <th>Grade</th>
+                                <th>Point</th>
+                                <th>Contribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in result.even_semester_courses %}
+                            <tr>
+                                <td class="fw-bold">
+                                    <span class="badge bg-secondary">{{ course.semester }}</span>
+                                </td>
+                                <td class="fw-bold text-primary">{{ course.course_code }}</td>
+                                <td>{{ course.credit }}</td>
+                                <td>{{ course.earned }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ course.grade }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set grade_points = {'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D': 4, 'F': 0, 'FF': 0} %}
+                                    {% set grade_point = grade_points.get(course.grade.upper(), 0) %}
+                                    <span class="fw-bold">{{ grade_point }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">{{ (course.earned * grade_point)|int }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-active fw-bold">
+                            <tr>
+                                <td colspan="2">Total</td>
+                                <td>{{ result.even_semester_courses|sum(attribute='credit') }}</td>
+                                <td>{{ result.even_semester_courses|sum(attribute='earned') }}</td>
+                                <td></td>
+                                <td></td>
+                                <td>{{ "%.1f"|format(result.calculated_data.current.egp) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="text-center mt-4">
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+        <i class="fas fa-plus-circle me-2"></i>Verify Another
+    </a>
+    {% if result.pdf_url %}
+    <button onclick="printMarksheet('{{ result.pdf_url }}')" class="btn btn-success btn-lg">
+        <i class="fas fa-print me-2"></i>Print Marksheet
+    </button>
+    {% endif %}
+</div>
+
+<script>
+    function printMarksheet(pdfUrl) {
+    if (pdfUrl) {
+        console.log('Printing PDF from URL:', pdfUrl);
+        
+        // Method 1: Direct print using iframe (most reliable)
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = pdfUrl;
+        document.body.appendChild(iframe);
+        
+        iframe.onload = function() {
+            console.log('PDF loaded in iframe, attempting to print...');
+            try {
+                // Wait a bit for PDF to fully render
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    
+                    // Add event listeners for print dialog
+                    iframe.contentWindow.addEventListener('afterprint', function() {
+                        console.log('Print completed or cancelled');
+                        // Clean up after printing is done
+                        setTimeout(() => {
+                            if (document.body.contains(iframe)) {
+                                document.body.removeChild(iframe);
+                            }
+                        }, 1000);
+                    });
+                    
+                    // Trigger print
+                    iframe.contentWindow.print();
+                    console.log('Print command sent successfully');
+                    
+                }, 1000); // Wait 1 second for PDF to render
+            } catch (error) {
+                console.error('Iframe print error:', error);
+                // Clean up and try fallback
+                if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                }
+                fallbackPrint(pdfUrl);
+            }
+        };
+        
+        iframe.onerror = function() {
+            console.error('Failed to load PDF in iframe');
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+            }
+            fallbackPrint(pdfUrl);
+        };
+        
+        // Set timeout for iframe loading
+        setTimeout(() => {
+            if (document.body.contains(iframe) && (!iframe.contentWindow || iframe.contentWindow.document.readyState !== 'complete')) {
+                console.error('Iframe loading timeout');
+                if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                }
+                fallbackPrint(pdfUrl);
+            }
+        }, 15000); // 15 second timeout
+        
+    } else {
+        alert('PDF not available for printing.');
+    }
+}
+
+function fallbackPrint(pdfUrl) {
+    console.log('Using fallback print method');
+    
+    // Method 2: Download first, then print
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pdfUrl;
+    downloadLink.download = 'marksheet.pdf';
+    downloadLink.target = '_blank';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    // Inform user to print the downloaded file
+    setTimeout(() => {
+        const userChoice = confirm(
+            'The marksheet has been opened in a new tab or downloaded.\n\n' +
+            'Please use the print function in your PDF viewer (Ctrl+P) to print the marksheet.\n\n' +
+            'Click OK to continue.'
+        );
+    }, 1000);
+}
+</script>
+{% endblock %}

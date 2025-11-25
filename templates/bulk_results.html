@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body text-center py-5">
+                    <div class="feature-icon mx-auto mb-4">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <h1 class="display-6 fw-bold gradient-text mb-3">Bulk Verification Results</h1>
+                    <p class="text-muted lead mb-0">Comprehensive analysis of uploaded marksheets</p>
+                </div>
+            </div>
+
+            <!-- Summary Statistics -->
+            <div class="row mb-5">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mx-auto mb-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h3 class="fw-bold text-primary mb-2">{{ results|length }}</h3>
+                            <p class="text-muted mb-0 fw-semibold">Total Files</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mx-auto mb-3 status-verified" style="width: 60px; height: 60px;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h3 class="fw-bold text-success mb-2">{{ results|selectattr('status', 'equalto', '✅ Correct')|list|length }}</h3>
+                            <p class="text-muted mb-0 fw-semibold">Verified Correct</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mx-auto mb-3 status-mismatch" style="width: 60px; height: 60px;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h3 class="fw-bold text-danger mb-2">{{ results|selectattr('status', 'equalto', '❌ Wrong')|list|length }}</h3>
+                            <p class="text-muted mb-0 fw-semibold">Mismatches Found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mx-auto mb-3 status-warning" style="width: 60px; height: 60px;">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <h3 class="fw-bold text-warning mb-2">{{ results|selectattr('error')|list|length }}</h3>
+                            <p class="text-muted mb-0 fw-semibold">Processing Errors</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-table me-2"></i>Detailed Verification Results
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-4 fw-semibold">File Name & Actions</th>
+                                    <th class="text-center fw-semibold">Student Type</th>
+                                    <th class="text-center fw-semibold">Status</th>
+                                    <th class="text-center fw-semibold">Current EGP</th>
+                                    <th class="text-center fw-semibold">Current Credits</th>
+                                    <th class="text-center fw-semibold">Current SGPA</th>
+                                    <th class="text-center fw-semibold">Previous EGP</th>
+                                    <th class="text-center fw-semibold">Previous Credits</th>
+                                    <th class="text-center fw-semibold">Previous SGPA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in results %}
+                                <tr class="{% if r.status == '✅ Correct' %}table-success{% elif r.status == '❌ Wrong' %}table-danger{% else %}table-warning{% endif %}">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-pdf text-danger me-3 fs-5"></i>
+                                            <div class="flex-grow-1">
+                                                <span class="fw-bold text-dark d-block">{{ r.filename }}</span>
+                                                {% if r.error %}
+                                                <small class="text-muted d-block mt-1">{{ r.error }}</small>
+                                                {% else %}
+                                                <div class="mt-2">
+                                                    {% if r.pdf_url %}
+                                                    <button onclick="printMarksheet('{{ r.pdf_url }}')" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-print me-1"></i>Print Marksheet
+                                                    </button>
+                                                    {% else %}
+                                                    <span class="text-muted small">PDF not available</span>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-{{ 'user-graduate' if 'NEP' in r.student_type else 'user' }} me-1"></i>
+                                            {{ r.student_type }}
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <span class="badge {% if r.status == '✅ Correct' %}status-verified{% else %}status-mismatch{% endif %}">
+                                            <i class="fas fa-{{ 'check' if r.status == '✅ Correct' else 'exclamation' }}-circle me-1"></i>
+                                            {{ 'Verified' if r.status == '✅ Correct' else 'Mismatch' }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Current Semester Data -->
+                                    <td class="text-center">
+                                        {% if r.reported.egp > 0 %}
+                                        <div class="fw-bold text-dark fs-6">{{ "%.1f"|format(r.reported.egp) }}</div>
+                                        <small class="text-muted">Calculated: {{ "%.1f"|format(r.calculated.egp) }}</small>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if r.reported.credits > 0 %}
+                                        <div class="fw-bold text-dark fs-6">{{ "%.1f"|format(r.reported.credits) }}</div>
+                                        <small class="text-muted">Calculated: {{ "%.1f"|format(r.calculated.credits) }}</small>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if r.reported.sgpa > 0 %}
+                                        <div class="fw-bold text-dark fs-6">{{ "%.2f"|format(r.reported.sgpa) }}</div>
+                                        <small class="text-muted">Calculated: {{ "%.2f"|format(r.calculated.sgpa) }}</small>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Previous Semester Data -->
+                                    <td class="text-center">
+                                        {% if r.previous_reported.egp > 0 %}
+                                        <div class="fw-bold text-dark fs-6">{{ "%.1f"|format(r.previous_reported.egp) }}</div>
+                                        <small class="text-muted">Calculated: {{ "%.1f"|format(r.previous_calculated.egp) }}</small>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if r.previous_reported.credits > 0 %}
+                                        <div class="fw-bold text-dark fs-6">{{ "%.1f"|format(r.previous_reported.credits) }}</div>
+                                        <small class="text-muted">Calculated: {{ "%.1f"|format(r.previous_calculated.credits) }}</small>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if r.previous_reported.sgpa > 0 %}
+                                        <div class="fw-bold text-dark fs-6">{{ "%.2f"|format(r.previous_reported.sgpa) }}</div>
+                                        <small class="text-muted">Calculated: {{ "%.2f"|format(r.previous_calculated.sgpa) }}</small>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 border-end">
+                            <h4 class="fw-bold text-success mb-1">{{ results|selectattr('status', 'equalto', '✅ Correct')|list|length }}</h4>
+                            <p class="text-muted mb-0">Successfully Verified</p>
+                        </div>
+                        <div class="col-md-4 border-end">
+                            <h4 class="fw-bold text-danger mb-1">{{ results|selectattr('status', 'equalto', '❌ Wrong')|list|length }}</h4>
+                            <p class="text-muted mb-0">Requires Attention</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="fw-bold text-warning mb-1">{{ results|selectattr('error')|list|length }}</h4>
+                            <p class="text-muted mb-0">Processing Errors</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="text-center mt-5">
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3 px-4">
+        <i class="fas fa-arrow-left me-2"></i>Back to Upload
+    </a>
+</div>
+
+<script>
+    function printMarksheet(pdfUrl) {
+    if (pdfUrl) {
+        console.log('Printing PDF from URL:', pdfUrl);
+        
+        // Method 1: Direct print using iframe (most reliable)
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = pdfUrl;
+        document.body.appendChild(iframe);
+        
+        iframe.onload = function() {
+            console.log('PDF loaded in iframe, attempting to print...');
+            try {
+                // Wait a bit for PDF to fully render
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    
+                    // Add event listeners for print dialog
+                    iframe.contentWindow.addEventListener('afterprint', function() {
+                        console.log('Print completed or cancelled');
+                        // Clean up after printing is done
+                        setTimeout(() => {
+                            if (document.body.contains(iframe)) {
+                                document.body.removeChild(iframe);
+                            }
+                        }, 1000);
+                    });
+                    
+                    // Trigger print
+                    iframe.contentWindow.print();
+                    console.log('Print command sent successfully');
+                    
+                }, 1000); // Wait 1 second for PDF to render
+            } catch (error) {
+                console.error('Iframe print error:', error);
+                // Clean up and try fallback
+                if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                }
+                fallbackPrint(pdfUrl);
+            }
+        };
+        
+        iframe.onerror = function() {
+            console.error('Failed to load PDF in iframe');
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+            }
+            fallbackPrint(pdfUrl);
+        };
+        
+        // Set timeout for iframe loading
+        setTimeout(() => {
+            if (document.body.contains(iframe) && (!iframe.contentWindow || iframe.contentWindow.document.readyState !== 'complete')) {
+                console.error('Iframe loading timeout');
+                if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                }
+                fallbackPrint(pdfUrl);
+            }
+        }, 15000); // 15 second timeout
+        
+    } else {
+        alert('PDF not available for printing.');
+    }
+}
+
+function fallbackPrint(pdfUrl) {
+    console.log('Using fallback print method');
+    
+    // Method 2: Download first, then print
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pdfUrl;
+    downloadLink.download = 'marksheet.pdf';
+    downloadLink.target = '_blank';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    // Inform user to print the downloaded file
+    setTimeout(() => {
+        const userChoice = confirm(
+            'The marksheet has been opened in a new tab or downloaded.\n\n' +
+            'Please use the print function in your PDF viewer (Ctrl+P) to print the marksheet.\n\n' +
+            'Click OK to continue.'
+        );
+    }, 1000);
+}
+</script>
+{% endblock %}
