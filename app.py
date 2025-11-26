@@ -404,5 +404,4 @@ def upload_bulk():
         
     return render_template('bulk_results.html', results=results)
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    
