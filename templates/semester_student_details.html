@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Details - Semester {{ student.semester }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body{background:#f0f2f5;padding:20px}
+        .card{max-width:800px;margin:auto;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.1)}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0}
+        .info-item{background:#f8f9fa;padding:12px;border-radius:10px}
+        .verified{color:green;font-weight:bold}
+        .mismatch{color:red;font-weight:bold}
+        .pass{color:green;font-weight:bold}
+        .fail{color:red;font-weight:bold}
+    </style>
+</head>
+<body>
+<div class="card p-4">
+    <h2 class="mb-3">Student Marksheet - Semester {{ student.semester }} ({{ student.exam_session }})</h2>
+    <div class="info-grid">
+        <div class="info-item"><b>Registration:</b> {{ student.registration_number }}</div>
+        <div class="info-item"><b>Name:</b> {{ student.student_name }}</div>
+        <div class="info-item"><b>Mother:</b> {{ student.mother_name or 'N/A' }}</div>
+        <div class="info-item"><b>Branch:</b> {{ student.branch_code }}</div>
+        <div class="info-item"><b>Semester:</b> {{ student.semester }}</div>
+        <div class="info-item"><b>Exam Year:</b> {{ student.exam_year }}</div>
+        <div class="info-item"><b>Session:</b> {{ student.exam_session }}</div>
+        <div class="info-item"><b>SGPA (Reported):</b> {{ student.sgpa or 'N/A' }}
+            <span class="{% if student.sgpa_verified %}verified{% else %}mismatch{% endif %}">
+                {% if student.sgpa_verified %}✔ Verified{% else %}✘ Mismatch{% endif %}
+            </span> (Calc: {{ student.calculated_sgpa or 'N/A' }})
+        </div>
+        <div class="info-item"><b>CGPA (Reported):</b> {{ student.cgpa or 'N/A' }}
+            <span class="{% if student.cgpa_verified %}verified{% else %}mismatch{% endif %}">
+                {% if student.cgpa_verified %}✔ Verified{% else %}✘ Mismatch{% endif %}
+            </span> (Calc: {{ student.calculated_cgpa or 'N/A' }})
+        </div>
+        <div class="info-item"><b>Result:</b> <span class="{% if student.result=='PASS' %}pass{% else %}fail{% endif %}">{{ student.result }}</span></div>
+        <div class="info-item"><b>Present Credits:</b> {{ student.present_credit or '0' }}</div>
+    </div>
+    <h4>Course-wise Performance</h4>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr><th>Course No.</th><th>Grade</th><th>Credit Points</th></tr>
+        </thead>
+        <tbody>
+            {% for c in courses %}
+            <tr><td>{{ c.course_number }}</td><td>{{ c.grade }}</td><td>{{ c.credit_points }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="mt-3">
+        <button onclick="window.print()" class="btn btn-primary">Print</button>
+        <button onclick="window.close()" class="btn btn-secondary">Close</button>
+    </div>
+</div>
+</body>
+</html>

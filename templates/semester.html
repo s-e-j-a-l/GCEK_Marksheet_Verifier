@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+            <div class="feature-icon mx-auto mb-4">
+                <i class="fas fa-table-list"></i>
+            </div>
+            <h1 class="display-6 fw-bold gradient-text mb-3">Semester Result Sheet Data Viewer</h1>
+            <p class="text-muted lead mb-0">Browse, filter and export stored student semester data</p>
+        </div>
+    </div>
+
+    <!-- Upload additional files -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload More Result Sheets</h5>
+        </div>
+        <div class="card-body">
+            <form action="/semester/upload" method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Branch *</label>
+                    <select name="branch" class="form-select" required>
+                        <option value="">-- Choose Branch --</option>
+                        {% for b in branches %}
+                        <option value="{{ b.branch_code }}">{{ b.branch_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">PDF Files</label>
+                    <input type="file" name="files" class="form-control" multiple accept=".pdf" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-database me-2"></i>Process & Store
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Records</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Branch</label>
+                    <select id="branch" class="form-select">
+                        <option value="">All</option>
+                        {% for b in branches %}
+                        <option value="{{ b.branch_code }}">{{ b.branch_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Semester</label>
+                    <select id="semester" class="form-select">
+                        <option value="">All</option>
+                        {% for i in range(1,9) %}
+                        <option value="{{ i }}">Semester {{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Academic Year</label>
+                    <select id="academic_year" class="form-select">
+                        <option value="">All</option>
+                        {% for y in academic_years %}
+                        <option value="{{ y }}">{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Exam Session</label>
+                    <select id="exam_session" class="form-select">
+                        <option value="">All</option>
+                        <option>Summer</option>
+                        <option>Winter</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" id="search" class="form-control" placeholder="Name or Reg No">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button onclick="loadData()" class="btn btn-primary w-100"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 d-flex gap-2">
+                    <button onclick="exportData()" class="btn btn-success"><i class="fas fa-file-excel me-2"></i>Export Excel</button>
+                    <button onclick="resetFilters()" class="btn btn-secondary"><i class="fas fa-undo me-2"></i>Reset</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary ms-auto"><i class="fas fa-home me-2"></i>Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4" id="stats">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <h3 class="text-primary mb-0" id="totalCount">-</h3>
+                    <p class="text-muted mb-0">Total Records</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <h3 class="text-success mb-0" id="passedCount">-</h3>
+                    <p class="text-muted mb-0">Passed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <h3 class="text-danger mb-0" id="failedCount">-</h3>
+                    <p class="text-muted mb-0">Failed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Reg No</th><th>Name</th><th>Mother</th><th>Branch</th><th>Sem</th>
+                            <th>Exam Session</th><th>SGPA (Rptd)</th><th>SGPA (Calc)</th><th>Ver</th>
+                            <th>CGPA (Rptd)</th><th>CGPA (Calc)</th><th>Ver</th><th>Result</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="14" class="text-center py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadData() {
+        const params = new URLSearchParams({
+            branch: document.getElementById('branch').value,
+            semester: document.getElementById('semester').value,
+            academic_year: document.getElementById('academic_year').value,
+            exam_session: document.getElementById('exam_session').value,
+            search: document.getElementById('search').value
+        });
+        fetch('/semester/api/students?' + params)
+            .then(r => r.json())
+            .then(data => {
+                let tbody = document.getElementById('tableBody');
+                if (!data.students || data.students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="14" class="text-center">No records match the filters. Try Reset.</td></tr>';
+                    document.getElementById('totalCount').innerText = '0';
+                    document.getElementById('passedCount').innerText = '0';
+                    document.getElementById('failedCount').innerText = '0';
+                    return;
+                }
+                let html = '';
+                let grouped = {};
+                data.students.forEach(s => {
+                    let branch = s.branch_code || "Unknown";
+                    let batch = s.academic_year || "Unknown";
+                    if (!grouped[branch]) grouped[branch] = {};
+                    if (!grouped[branch][batch]) grouped[branch][batch] = [];
+                    grouped[branch][batch].push(s);
+                });
+                for (let branch in grouped) {
+                    html += `<tr style="background:#1a73e8;color:white;"><td colspan="14"><b>📘 ${branch} Department</b></td></tr>`;
+                    for (let batch in grouped[branch]) {
+                        html += `<tr style="background:#f1f1f1;"><td colspan="14"><b>Batch: ${batch}</b></td></tr>`;
+                        grouped[branch][batch].forEach(s => {
+                            let sgpaBadge = s.sgpa_verified ? '<span class="badge bg-success">✔ Verified</span>' : '<span class="badge bg-danger">✘ Mismatch</span>';
+                            let cgpaBadge = s.cgpa_verified ? '<span class="badge bg-success">✔ Verified</span>' : '<span class="badge bg-danger">✘ Mismatch</span>';
+                            let sgpaDisplay = s.sgpa !== null ? s.sgpa : 'N/A';
+                            let calcSgpa = s.calculated_sgpa !== null ? s.calculated_sgpa : 'N/A';
+                            let cgpaDisplay = s.cgpa !== null ? s.cgpa : 'N/A';
+                            let calcCgpa = s.calculated_cgpa !== null ? s.calculated_cgpa : 'N/A';
+                            let resultClass = s.result === 'PASS' ? 'bg-success' : 'bg-danger';
+                            html += `
+                            <tr>
+                                <td>${s.registration_number || ''}</td>
+                                <td>${s.student_name || ''}</td>
+                                <td>${s.mother_name || 'N/A'}</td>
+                                <td>${s.branch_code || ''}</td>
+                                <td>${s.semester || ''}</td>
+                                <td>${s.exam_session || ''}</td>
+                                <td>${sgpaDisplay}</td>
+                                <td>${calcSgpa}</td>
+                                <td>${sgpaBadge}</td>
+                                <td>${cgpaDisplay}</td>
+                                <td>${calcCgpa}</td>
+                                <td>${cgpaBadge}</td>
+                                <td><span class="badge ${resultClass}">${s.result || 'N/A'}</span></td>
+                                <td><button class="btn btn-sm btn-outline-primary" onclick="window.open('/semester/student/${s.registration_number}/${s.semester}/${encodeURIComponent(s.exam_session)}','_blank')">View</button></td>
+                            </tr>`;
+                        });
+                    }
+                }
+                tbody.innerHTML = html;
+                let stats = data.stats;
+                document.getElementById('totalCount').innerText = stats.total;
+                document.getElementById('passedCount').innerText = stats.passed;
+                document.getElementById('failedCount').innerText = stats.failed;
+            })
+            .catch(e => {
+                console.error(e);
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="14" class="text-center text-danger">Error loading data</td></tr>';
+            });
+    }
+
+    function exportData() {
+        let params = new URLSearchParams({
+            branch: document.getElementById('branch').value,
+            semester: document.getElementById('semester').value,
+            academic_year: document.getElementById('academic_year').value,
+            exam_session: document.getElementById('exam_session').value,
+            search: document.getElementById('search').value
+        });
+        window.location.href = '/semester/export?' + params;
+    }
+
+    function resetFilters() {
+        document.getElementById('branch').value = '';
+        document.getElementById('semester').value = '';
+        document.getElementById('academic_year').value = '';
+        document.getElementById('exam_session').value = '';
+        document.getElementById('search').value = '';
+        loadData();
+    }
+
+    loadData();
+</script>
+{% endblock %}
